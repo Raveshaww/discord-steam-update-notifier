@@ -3,6 +3,7 @@ A Discord bot that will notify users when a game server has been updated. This c
 # To Do
 - Adjust folder structure
     - Look into way to move class out of `cmd/steamcmd.py` in conjunction with database record creation
+            - Move to `utils` dir?
 - Store data in database
     - Postgresql for practice
 - Discord notification
