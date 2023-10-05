@@ -10,4 +10,8 @@ A Discord bot that will notify users when a game server has been updated. This c
     - send notifications upon change
 # Notes
 - Valheim dedicated server steamid is 896660
-- Example json output from steamcmd api is `pretty_json.json`
+- Example json output from steamcmd api is `pretty_json.json`\
+# Uses following packages
+- discord.py
+- requests
+- sqlalchemy
