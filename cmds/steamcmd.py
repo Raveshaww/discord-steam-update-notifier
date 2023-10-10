@@ -70,7 +70,7 @@ async def list(ctx):
         
         if tracked_software:
             # Rather than a deluge of messages, we're going to send just one message
-            output = []
+            output = ["Name - SteamID"]
             for package in tracked_software:
                 output.append(f"{package.name} - {package.steamid}")
 
