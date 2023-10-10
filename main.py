@@ -1,7 +1,13 @@
 import settings
 import discord
-from dotenv import load_dotenv
-from discord.ext import commands
+from discord.ext import commands, tasks
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+from models.models import SteamidData, DiscordServer
+from utils import get_steamid_info
+
+session_maker = sessionmaker(bind=create_engine('sqlite:///models.db'))
+
 
 def run():
     intents = discord.Intents.default()
@@ -11,11 +17,26 @@ def run():
 
     @bot.event
     async def on_ready():
-        # Dynamically add all commands found in the cmds directory
-        for cmd_file in settings.CMDS_DIR.glob("*.py"):
-            if cmd_file.name != "__init__.py":
-                await bot.load_extension(f"cmds.{cmd_file.name[:-3]}")
+        # Load all commands from cmds/steamcmd.py
+        await bot.load_extension("cmds.steamcmd")
+        
+        await  background_task.start()
 
+    @tasks.loop(seconds=60)
+    async def background_task():
+        with session_maker() as session:
+            tracked_software = session.query(SteamidData).all()
+
+            updated_software = []
+            for package in tracked_software:
+                current_buildid = get_steamid_info(package.steamid)["buildid"]
+
+                if current_buildid > package.buildid:
+                    updated_software.append(package.steamid)
+                
+
+            print("\n".join(updated_software))
+       
     bot.run(settings.TOKEN) 
 
 if __name__ == "__main__":
