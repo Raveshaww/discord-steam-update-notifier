@@ -30,7 +30,7 @@ async def add(ctx, steamid):
             software = session.query(SteamidData).filter_by(steamid=steamid).first()
 
             if software is None:
-                steamcmd_results = get_steamid_info(steamid=steamid)
+                steamcmd_results = await get_steamid_info(steamid=steamid)
 
                 software = SteamidData(
                     steamid = steamid,
@@ -72,16 +72,24 @@ async def add(ctx, steamid):
 )
 async def remove(ctx, steamid):
     with session_maker() as session:
-        discord_server = session.query(DiscordServer).join(SteamidData).filter(
-            DiscordServer.steamid == steamid,
-        ).first()
+        # You could technically reduce this down to one query, but SQLite doesn't seem to support multi-
+        # table criteria within DELETE, so I'm going to just do this for now.
+        steamid_data = session.query(SteamidData).filter_by(steamid = steamid).first()
+        discord_server = session.query(DiscordServer).filter_by(serverid = ctx.guild.id).first()
 
-        if discord_server:
-            session.delete(discord_server)
-            session.commit()
-            await ctx.send(f"Stopped tracking {steamid} for this server.")
+        remove_tracking = tracking.delete().where(
+            (tracking.c.steamid == steamid_data.id) &
+            (tracking.c.serverid == discord_server.id)
+        )
+
+        deleted_count = session.execute(remove_tracking).rowcount
+
+        session.commit()
+        
+        if deleted_count > 0:
+            await ctx.send(f"Stopped tracking {steamid_data.name} for this server.")
         else: 
-            await ctx.send(f"{steamid} was not being tracked for this server.")
+            await ctx.send(f"{steamid_data.name} was not being tracked for this server.")
 
 
 @steamid.command(
@@ -90,9 +98,9 @@ async def remove(ctx, steamid):
 )
 async def list(ctx):
     with session_maker() as session:
-        tracked_software = session.query(SteamidData.name, SteamidData.steamid).join(DiscordServer).filter(
-            DiscordServer.serverid == ctx.guild.id
-        )
+        tracked_software = session.query(SteamidData).\
+            filter(SteamidData.servers.any(DiscordServer.serverid == ctx.guild.id)).\
+            all()
         
         if tracked_software:
             # Rather than a deluge of messages, we're going to send just one message

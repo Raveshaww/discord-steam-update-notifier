@@ -1,8 +1,8 @@
 # Discord Bot - Game Update Notifier
 A Discord bot that will notify users when a game server has been updated. This can be helpful for finding out when a game has gone through some updates, and can help people decide to jump back into a game with friends after a hiatus. 
 # To Do
-- Fix list "route"
-- Fix remove "route"
+- Change get_steamid_info to accept several steamids
+    - This is to allow us to utilize a single request session when we want to run the scheduled task to check if something has updated
 - error handling for the add "route" and the steamcmd api call
 - logging
 - Discord notification
