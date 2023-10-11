@@ -24,19 +24,8 @@ def run():
 
     @tasks.loop(seconds=60)
     async def background_task():
-        with session_maker() as session:
-            tracked_software = session.query(SteamidData).all()
+        print("Hi")
 
-            updated_software = []
-            for package in tracked_software:
-                current_buildid = get_steamid_info(package.steamid)["buildid"]
-
-                if current_buildid > package.buildid:
-                    updated_software.append(package.steamid)
-                
-
-            print("\n".join(updated_software))
-       
     bot.run(settings.TOKEN) 
 
 if __name__ == "__main__":

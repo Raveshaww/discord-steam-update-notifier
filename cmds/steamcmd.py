@@ -1,8 +1,8 @@
 from discord.ext import commands
 from utils.get_steamid_info import get_steamid_info
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, aliased
 from sqlalchemy import create_engine
-from models.models import SteamidData, DiscordServer
+from models.models import SteamidData, DiscordServer, tracking
 
 session_maker = sessionmaker(bind=create_engine('sqlite:///models.db'))
 
@@ -17,27 +17,53 @@ async def steamid(ctx):
     brief="Add a steamid to track."
 )
 async def add(ctx, steamid):
-    steamcmd_results = get_steamid_info(steamid=steamid)
-
     with session_maker() as session:
-        software = SteamidData(
-            steamid = steamid,
-            name = steamcmd_results["name"],
-            buildid = steamcmd_results["buildid"],
-        )
+        # Checking to see if this server is already tracking the software
+        existing_tracking = session.query(SteamidData).\
+            filter(SteamidData.steamid == steamid).\
+            filter(SteamidData.servers.any(DiscordServer.serverid == ctx.guild.id)).\
+            first()
+        
+        if existing_tracking:
+            await ctx.send(f"Already tracking {existing_tracking.name}.")
+        else:
+            software = session.query(SteamidData).filter_by(steamid=steamid).first()
 
-        # Basically, we're telling SQL Alchemy to update the DiscordServer table
-        # as well as the SteamidData table
-        discord_server = DiscordServer(serverid=ctx.guild.id)
-        software.servers.append(discord_server)
+            if software is None:
+                steamcmd_results = get_steamid_info(steamid=steamid)
 
-        # .merge will add the record if it doesn't exist, and update it if it does
-        # This is great here, since we will only need to update the SteamidData table if
-        # the Steamid in question doesn't already exist there, but we will always need to
-        # update the DiscordServer table
-        session.merge(software)
-        session.commit()
-    await ctx.send(f"Added {steamcmd_results['name']} to tracked Steam packages.")
+                software = SteamidData(
+                    steamid = steamid,
+                    name = steamcmd_results["name"],
+                    buildid = steamcmd_results["buildid"],
+                )
+
+                session.add(software)
+                session.commit()
+
+            # Add to tracking table
+            existing_server = session.query(DiscordServer).filter_by(serverid = ctx.guild.id).first()
+
+            # If a tracking channel isn't set, we're just going to use the channel the command was issued from
+            if existing_server is None:
+                server = DiscordServer(
+                    serverid = ctx.guild.id,
+                    channelid = ctx.channel.id
+                )
+
+                session.add(server)
+                # We need the DiscordServer record  to exist before tracking the software, so we'll create it
+                session.commit()
+
+                software.servers.append(server)
+                session.commit()
+
+                await ctx.send(f"Added {software.name} to tracked Steam packages.")
+                await ctx.send(f"Using {ctx.channel.name} as the notification channel. Run 'set_channel' in the desired channel to change this.")
+            else: 
+                software.servers.append(existing_server)
+                session.commit()
+                await ctx.send(f"Added {software.name} to tracked Steam packages.")
 
 
 @steamid.command(
@@ -78,6 +104,28 @@ async def list(ctx):
         else:
             await ctx.send("No Steam packages are currently being tracked for this server.")       
 
+@steamid.command(
+    description="Set notification channel.",
+    brief="Set notification channel."
+)
+async def set_channel(ctx):
+    with session_maker() as session:
+        existing_channel = session.query(DiscordServer).filter_by(serverid = ctx.guild.id).first()
+
+        
+        if existing_channel is None:
+            server = DiscordServer(
+                serverid = ctx.guild.id,
+                channelid = ctx.channel.id
+            )
+
+            session.add(server)
+            session.commit()
+        else:
+            existing_channel.channelid = ctx.channel.id
+            session.commit()
+
+    await ctx.send(f"Using {ctx.channel.name} for update notifications.")  
 
 async def setup(bot):
     bot.add_command(steamid)
