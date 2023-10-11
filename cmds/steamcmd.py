@@ -26,44 +26,49 @@ async def add(ctx, steamid):
         
         if existing_tracking:
             await ctx.send(f"Already tracking {existing_tracking.name}.")
-        else:
-            software = session.query(SteamidData).filter_by(steamid=steamid).first()
+            return
+        
+        software = session.query(SteamidData).filter_by(steamid=steamid).first()
 
-            if software is None:
-                steamcmd_results = await get_steamid_info(steamid=steamid)
+        if software is None:
+            steamcmd_results = await get_steamid_info(steamid=steamid)
+            
+            if steamcmd_results is None:
+                await ctx.send("Invalid input.")
+                return
+            
+            software = SteamidData(
+                steamid = steamid,
+                name = steamcmd_results["name"],
+                buildid = steamcmd_results["buildid"],
+            )
 
-                software = SteamidData(
-                    steamid = steamid,
-                    name = steamcmd_results["name"],
-                    buildid = steamcmd_results["buildid"],
-                )
+            session.add(software)
+            session.commit()
 
-                session.add(software)
-                session.commit()
+        # Add to tracking table
+        existing_server = session.query(DiscordServer).filter_by(serverid = ctx.guild.id).first()
 
-            # Add to tracking table
-            existing_server = session.query(DiscordServer).filter_by(serverid = ctx.guild.id).first()
+        # If a tracking channel isn't set, we're just going to use the channel the command was issued from
+        if existing_server is None:
+            server = DiscordServer(
+                serverid = ctx.guild.id,
+                channelid = ctx.channel.id
+            )
 
-            # If a tracking channel isn't set, we're just going to use the channel the command was issued from
-            if existing_server is None:
-                server = DiscordServer(
-                    serverid = ctx.guild.id,
-                    channelid = ctx.channel.id
-                )
+            session.add(server)
+            # We need the DiscordServer record  to exist before tracking the software, so we'll create it
+            session.commit()
 
-                session.add(server)
-                # We need the DiscordServer record  to exist before tracking the software, so we'll create it
-                session.commit()
+            software.servers.append(server)
+            session.commit()
 
-                software.servers.append(server)
-                session.commit()
-
-                await ctx.send(f"Added {software.name} to tracked Steam packages.")
-                await ctx.send(f"Using {ctx.channel.name} as the notification channel. Run 'set_channel' in the desired channel to change this.")
-            else: 
-                software.servers.append(existing_server)
-                session.commit()
-                await ctx.send(f"Added {software.name} to tracked Steam packages.")
+            await ctx.send(f"Added {software.name} to tracked Steam packages.")
+            await ctx.send(f"Using {ctx.channel.name} as the notification channel. Run 'set_channel' in the desired channel to change this.")
+        else: 
+            software.servers.append(existing_server)
+            session.commit()
+            await ctx.send(f"Added {software.name} to tracked Steam packages.")
 
 
 @steamid.command(
