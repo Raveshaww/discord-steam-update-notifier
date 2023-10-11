@@ -1,13 +1,6 @@
 import settings
 import discord
 from discord.ext import commands, tasks
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-from models.models import SteamidData, DiscordServer
-from utils import get_steamid_info
-
-session_maker = sessionmaker(bind=create_engine('sqlite:///models.db'))
-
 
 def run():
     intents = discord.Intents.default()

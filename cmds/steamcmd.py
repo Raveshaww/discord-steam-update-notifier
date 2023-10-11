@@ -1,6 +1,6 @@
 from discord.ext import commands
 from utils.get_steamid_info import get_steamid_info
-from sqlalchemy.orm import sessionmaker, aliased
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from models.models import SteamidData, DiscordServer, tracking
 
