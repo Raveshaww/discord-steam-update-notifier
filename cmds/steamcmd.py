@@ -122,14 +122,13 @@ async def remove(ctx, steamid: str):
     brief="List tracked steamids."
 )
 async def list(ctx):
-    with session_maker() as session:
+    async with session_maker() as session:
         serverid = str(ctx.guild.id)
 
-        tracked_software = session.query(SteamidData).\
-            filter(SteamidData.servers.any(DiscordServer.serverid == serverid)).\
-            all()
-        
-        if tracked_software:
+        tracked_software = await session.execute(select(SteamidData).\
+                                                 filter(SteamidData.servers.any(DiscordServer.serverid == serverid)))
+
+        if tracked_software.scalars().all():
             # Rather than a deluge of messages, we're going to send just one message
             output = ["Name - SteamID"]
             for package in tracked_software:
@@ -150,7 +149,6 @@ async def set_channel(ctx):
         channelid = str(ctx.channel.id)
         
         existing_channel = await session.execute(select(DiscordServer).filter_by(serverid = serverid))
-        #existing_channel = session.query(DiscordServer).filter_by(serverid = serverid).first()
         
         if existing_channel.first() is None:
             server = DiscordServer(
