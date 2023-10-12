@@ -1,6 +1,7 @@
 import settings
 import discord
-from discord.ext import commands, tasks
+import os
+from discord.ext import commands
 
 def run():
     intents = discord.Intents.default()
@@ -10,14 +11,15 @@ def run():
 
     @bot.event
     async def on_ready():
-        # Load all commands from cmds/steamcmd.py
-        await bot.load_extension("cmds.steamcmd")
+        # Load all commands from cmds directory
+        for filename in os.listdir("./cmds"):
+            if filename.endswith(".py"):   
+                await bot.load_extension(f"cmds.{filename[:-3]}")
         
-        await  background_task.start()
-
-    @tasks.loop(seconds=60)
-    async def background_task():
-        print("Hi")
+        # Load all background tasks from tasks directory
+        for filename in os.listdir("./tasks"):
+            if filename.endswith(".py"):   
+                await bot.load_extension(f"tasks.{filename[:-3]}")
 
     bot.run(settings.TOKEN) 
 

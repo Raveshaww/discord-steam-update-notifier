@@ -3,8 +3,11 @@ from utils.get_steamid_info import get_steamid_info
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from models.models import SteamidData, DiscordServer, tracking
+from settings import DB_URL
 
-session_maker = sessionmaker(bind=create_engine('sqlite:///models.db'))
+
+session_maker = sessionmaker(bind=create_engine(DB_URL))
+
 
 @commands.group()
 async def steamid(ctx):
@@ -16,12 +19,15 @@ async def steamid(ctx):
     description="Add a steamid to track for updates.",
     brief="Add a steamid to track."
 )
-async def add(ctx, steamid):
+async def add(ctx, steamid: str):
     with session_maker() as session:
+        serverid = str(ctx.guild.id)
+        channelid = str(ctx.channel.id)
+
         # Checking to see if this server is already tracking the software
         existing_tracking = session.query(SteamidData).\
             filter(SteamidData.steamid == steamid).\
-            filter(SteamidData.servers.any(DiscordServer.serverid == ctx.guild.id)).\
+            filter(SteamidData.servers.any(DiscordServer.serverid == serverid)).\
             first()
         
         if existing_tracking:
@@ -47,13 +53,13 @@ async def add(ctx, steamid):
             session.commit()
 
         # Add to tracking table
-        existing_server = session.query(DiscordServer).filter_by(serverid = ctx.guild.id).first()
+        existing_server = session.query(DiscordServer).filter_by(serverid = serverid).first()
 
         # If a tracking channel isn't set, we're just going to use the channel the command was issued from
         if existing_server is None:
             server = DiscordServer(
-                serverid = ctx.guild.id,
-                channelid = ctx.channel.id
+                serverid = serverid,
+                channelid = channelid
             )
 
             session.add(server)
@@ -75,12 +81,12 @@ async def add(ctx, steamid):
     description="Remove a steamid from tracking in the DiscordServer table for the specific server.",
     brief="Remove a steamid from tracking in DiscordServer for this server."
 )
-async def remove(ctx, steamid):
+async def remove(ctx, steamid: str):
     with session_maker() as session:
-        # You could technically reduce this down to one query, but SQLite doesn't seem to support multi-
-        # table criteria within DELETE, so I'm going to just do this for now.
+        serverid = str(ctx.guild.id)
+
         steamid_data = session.query(SteamidData).filter_by(steamid = steamid).first()
-        discord_server = session.query(DiscordServer).filter_by(serverid = ctx.guild.id).first()
+        discord_server = session.query(DiscordServer).filter_by(serverid = serverid).first()
 
         remove_tracking = tracking.delete().where(
             (tracking.c.steamid == steamid_data.id) &
@@ -103,8 +109,10 @@ async def remove(ctx, steamid):
 )
 async def list(ctx):
     with session_maker() as session:
+        serverid = str(ctx.guild.id)
+
         tracked_software = session.query(SteamidData).\
-            filter(SteamidData.servers.any(DiscordServer.serverid == ctx.guild.id)).\
+            filter(SteamidData.servers.any(DiscordServer.serverid == serverid)).\
             all()
         
         if tracked_software:
@@ -117,25 +125,28 @@ async def list(ctx):
         else:
             await ctx.send("No Steam packages are currently being tracked for this server.")       
 
+
 @steamid.command(
     description="Set notification channel.",
     brief="Set notification channel."
 )
 async def set_channel(ctx):
     with session_maker() as session:
-        existing_channel = session.query(DiscordServer).filter_by(serverid = ctx.guild.id).first()
-
+        serverid = str(ctx.guild.id)
+        channelid = str(ctx.channel.id)
+        
+        existing_channel = session.query(DiscordServer).filter_by(serverid = serverid).first()
         
         if existing_channel is None:
             server = DiscordServer(
-                serverid = ctx.guild.id,
-                channelid = ctx.channel.id
+                serverid = serverid,
+                channelid = channelid
             )
 
             session.add(server)
             session.commit()
         else:
-            existing_channel.channelid = ctx.channel.id
+            existing_channel.channelid = channelid
             session.commit()
 
     await ctx.send(f"Using {ctx.channel.name} for update notifications.")  

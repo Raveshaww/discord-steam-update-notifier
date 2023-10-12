@@ -6,6 +6,7 @@ A Discord bot that will notify users when a game server has been updated. This c
     - Alternatively, have this be its own function in get_steamid_info.py for the sake of clarity
 - Look into moving everything, steamcmd.py and the upcoming background task, into cog(s)
 - logging
+- Add error handling for the database connection
 - Discord notification
     - Schedule process to check for updates
     - send notifications upon change
