@@ -1,12 +1,15 @@
 from discord.ext import commands
 from utils.get_steamid_info import get_steamid_info
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from models.models import SteamidData, DiscordServer, tracking
 from settings import DB_URL
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
+engine = create_async_engine(DB_URL)
+session_maker = async_sessionmaker(engine)
 
-session_maker = sessionmaker(bind=create_engine(DB_URL))
+#session_maker = sessionmaker(bind=create_engine(DB_URL))
 
 
 @commands.group()
@@ -86,8 +89,19 @@ async def remove(ctx, steamid: str):
         serverid = str(ctx.guild.id)
 
         steamid_data = session.query(SteamidData).filter_by(steamid = steamid).first()
-        discord_server = session.query(DiscordServer).filter_by(serverid = serverid).first()
 
+        if steamid_data is None:
+            steamcmd_results = await get_steamid_info(steamid=steamid)
+            
+            if steamcmd_results is None:
+                await ctx.send("Invalid input.")
+                return
+            
+            await ctx.send(f"{steamcmd_results['name']} was not being tracked for this server.")
+            return
+
+        discord_server = session.query(DiscordServer).filter_by(serverid = serverid).first()
+    
         remove_tracking = tracking.delete().where(
             (tracking.c.steamid == steamid_data.id) &
             (tracking.c.serverid == discord_server.id)
@@ -131,23 +145,24 @@ async def list(ctx):
     brief="Set notification channel."
 )
 async def set_channel(ctx):
-    with session_maker() as session:
+    async with session_maker() as session:
         serverid = str(ctx.guild.id)
         channelid = str(ctx.channel.id)
         
-        existing_channel = session.query(DiscordServer).filter_by(serverid = serverid).first()
+        existing_channel = await session.execute(select(DiscordServer).filter_by(serverid = serverid))
+        #existing_channel = session.query(DiscordServer).filter_by(serverid = serverid).first()
         
-        if existing_channel is None:
+        if existing_channel.first() is None:
             server = DiscordServer(
                 serverid = serverid,
                 channelid = channelid
             )
 
             session.add(server)
-            session.commit()
+            await session.commit()
         else:
             existing_channel.channelid = channelid
-            session.commit()
+            await session.commit()
 
     await ctx.send(f"Using {ctx.channel.name} for update notifications.")  
 

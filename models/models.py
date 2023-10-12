@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, ForeignKey, Integer, Table
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, Mapped, mapped_column
 
 Base = declarative_base()
 
@@ -13,10 +13,10 @@ tracking = Table(
 class SteamidData(Base):
     __tablename__ = "steamid_data"
 
-    id = Column(Integer,primary_key=True, autoincrement=True)
-    steamid = Column(String, nullable=False)
-    name = Column(String, nullable=False)
-    buildid = Column(String, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    steamid: Mapped[str] = mapped_column(unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
+    buildid: Mapped[str] = mapped_column(nullable=False)
 
     servers = relationship(
         "DiscordServer", 
@@ -28,9 +28,9 @@ class SteamidData(Base):
 class DiscordServer(Base):
     __tablename__ = "discord_server"
 
-    id = Column(Integer,primary_key=True, autoincrement=True)
-    serverid = Column(String, nullable=False)
-    channelid = Column(String, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    serverid: Mapped[str] = mapped_column(unique=True, nullable=False)
+    channelid: Mapped[str] = mapped_column(unique=True, nullable=False)
 
     steamids = relationship(
         "SteamidData",
