@@ -25,6 +25,7 @@ async def mass_get_steamid_info(steamids):
                 if response.status == 200:
                     data = await response.json()
                     parsed_data = {
+                        "steamid": steamid,
                         "name": data["data"][steamid]["common"]["name"],
                         "buildid": data["data"][steamid]["depots"]["branches"]["public"]["buildid"]
                     }
