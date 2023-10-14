@@ -17,9 +17,13 @@ def run():
                 await bot.load_extension(f"cmds.{filename[:-3]}")
         
         # Load all background tasks from tasks directory
-        for filename in os.listdir("./tasks"):
+        #for filename in os.listdir("./tasks"):
+        #    if filename.endswith(".py"):   
+        #        await bot.load_extension(f"tasks.{filename[:-3]}")
+
+        for filename in os.listdir("./cogs"):
             if filename.endswith(".py"):   
-                await bot.load_extension(f"tasks.{filename[:-3]}")
+                await bot.load_extension(f"cogs.{filename[:-3]}")
 
     bot.run(settings.TOKEN) 
 
