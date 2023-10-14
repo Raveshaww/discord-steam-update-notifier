@@ -10,6 +10,9 @@ session_maker = async_sessionmaker(engine, class_=AsyncSession)
 
 
 class UpdateCog(commands.Cog):
+    '''Background task that checks for updates for all packages noted in SteamidData. 
+        In the event that a package has been updated, it will then send a message to each server
+        that is currently tracking that package.'''
     def __init__(self, bot):
         self.bot = bot
         self.check_buildid.start()

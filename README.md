@@ -3,9 +3,16 @@ A Discord bot that will notify users when a game server has been updated. This c
 # To Do
 - logging
 - docs
-- refactor steamcmd.py in cmd directory to a cog
-- general style and cleanup
+- dockerfile
+- tests
 # Notes
 - Working with Alembic
     - `alembic revision --autogenerate -m "<some_comment_here>"`
     - `alembic upgrade heads`
+- The following environment variables are needed:
+    - DISCORD_TOKEN
+        - Can be obtained from the Discord Developer Portal
+    - sqlalchemy.url
+        - Contains the connection string to the postgresql database to be used. Please note that this must use an async driver like asyncpg.
+    - alembic.url
+        - Contains the connection string to the postgresql database for alembic to use. Unlike the SQLAlchemy url, this must be a sync driver like psycopg.

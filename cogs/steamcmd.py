@@ -11,6 +11,7 @@ session_maker = async_sessionmaker(engine, class_=AsyncSession)
 
 
 class Steamid(commands.Cog):
+    '''Handles input / output commands from Discord users.'''
     def __init__(self, bot):
         self.bot = bot
 
@@ -24,6 +25,8 @@ class Steamid(commands.Cog):
         brief="Add a steamid to track."
     )
     async def add(self, ctx, steamid: str):
+        '''Starts tracking a steamid for the server. This will also set the channel to use for
+            a server's notifications if it has not yet been set.'''
         async with session_maker() as session:
             serverid = str(ctx.guild.id)
             channelid = str(ctx.channel.id)
@@ -99,10 +102,11 @@ class Steamid(commands.Cog):
                 await ctx.send(f"Added {software_name} to tracked Steam packages.")
 
     @steamid.command(
-        description="Remove a steamid from tracking in the DiscordServer table for the specific server.",
-        brief="Remove a steamid from tracking in DiscordServer for this server."
+        description="Stop tracking the specified steamid.",
+        brief="Stop tracking the specified steamid."
     )
     async def remove(self, ctx, steamid: str):
+        '''Stops tracking the supplied steamid for the server. This will not remove the steamid from SteamidData'''
         async with session_maker() as session:
             serverid = str(ctx.guild.id)
 
@@ -137,10 +141,11 @@ class Steamid(commands.Cog):
                 await ctx.send(f"{steamid_name} was not being tracked for this server.")
 
     @steamid.command(
-        description="List tracked steamid's.",
+        description="List tracked steamids.",
         brief="List tracked steamids."
     )
     async def list(self, ctx):
+        '''Lists all steamids currently tracked for the server.'''
         async with session_maker() as session:
             serverid = str(ctx.guild.id)
 
@@ -162,10 +167,11 @@ class Steamid(commands.Cog):
                 await ctx.send("No Steam packages are currently being tracked for this server.")
 
     @steamid.command(
-        description="Set notification channel.",
-        brief="Set notification channel."
+        description="Set update notification channel.",
+        brief="Set update notification channel."
     )
     async def set_channel(self, ctx):
+        '''Sets the channel to be used for update notifications for the server.'''
         async with session_maker() as session:
             serverid = str(ctx.guild.id)
             channelid = str(ctx.channel.id)

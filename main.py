@@ -12,14 +12,11 @@ def run():
 
     @bot.event
     async def on_ready():
-        # Load all commands from cmds directory
-        #for filename in os.listdir("./cmds"):
-        #    if filename.endswith(".py"):
-        #        await bot.load_extension(f"cmds.{filename[:-3]}")
-
         for filename in os.listdir("./cogs"):
             if filename.endswith(".py"):
                 await bot.load_extension(f"cogs.{filename[:-3]}")
+
+        await bot.tree.sync()
 
     bot.run(settings.TOKEN)
 

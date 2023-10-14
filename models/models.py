@@ -12,6 +12,8 @@ tracking = Table(
 
 
 class SteamidData(Base):
+    '''Database table that stores tracked steamid and buildid. Has a many-
+        to-many relationship with DiscordServer with the server field.'''
     __tablename__ = "steamid_data"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -28,6 +30,9 @@ class SteamidData(Base):
 
 
 class DiscordServer(Base):
+    '''Database table that stores the channelid for the channel to be used 
+        for notifications, as well as the serverid for that channel. Has a
+        many-to-many relationship with SteamidData with the steamids field.'''
     __tablename__ = "discord_server"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
