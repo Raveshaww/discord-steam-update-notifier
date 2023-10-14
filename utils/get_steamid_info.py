@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 
+
 async def get_steamid_info(steamid):
     async with aiohttp.ClientSession() as session:
         url = f"https://api.steamcmd.net/v1/info/{steamid}"
@@ -9,14 +10,16 @@ async def get_steamid_info(steamid):
                 data = await response.json()
 
                 parsed_data = {
-                    "name" : data["data"][steamid]["common"]["name"],
-                    "buildid" : data["data"][steamid]["depots"]["branches"]["public"]["buildid"]
+                    "name": data["data"][steamid]["common"]["name"],
+                    "buildid": data["data"][steamid]["depots"]["branches"]["public"]["buildid"]
                 }
                 return parsed_data
             else:
                 return None
 
-# Seperate function for clarity, and since it's relatively slow if you're only doing one http request
+# Seperate function for clarity
+
+
 async def mass_get_steamid_info(steamids):
     async with aiohttp.ClientSession() as session:
         async def fetch_steamid_info(steamid):
@@ -35,5 +38,5 @@ async def mass_get_steamid_info(steamids):
 
         # Use asyncio.gather to make concurrent requests
         results = await asyncio.gather(*[fetch_steamid_info(steamid) for steamid in steamids])
-        
+
         return results

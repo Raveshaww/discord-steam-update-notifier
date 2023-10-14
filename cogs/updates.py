@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from utils.get_steamid_info import mass_get_steamid_info
 
 engine = create_async_engine(DB_URL)
-session_maker = async_sessionmaker(engine, class_= AsyncSession)
+session_maker = async_sessionmaker(engine, class_=AsyncSession)
+
 
 class UpdateCog(commands.Cog):
     def __init__(self, bot):
@@ -34,7 +35,7 @@ class UpdateCog(commands.Cog):
                 steamids.append(package.steamid)
 
             # Now that we know, we're going to get the current buildids for all steamids we are tracking
-            steamid_data = await mass_get_steamid_info(steamids = steamids)
+            steamid_data = await mass_get_steamid_info(steamids=steamids)
 
             for steamid in steamid_data:
                 fresh_data[steamid["steamid"]] = steamid["buildid"]
@@ -47,8 +48,6 @@ class UpdateCog(commands.Cog):
             for key in existing_data:
                 if existing_data[key] != fresh_data[key]:
                     updated_software[key] = fresh_data[key]
-            
-            
 
             # Now let's get the list of all tracked
             to_notify = await session.execute(
@@ -58,7 +57,7 @@ class UpdateCog(commands.Cog):
                 .filter(SteamidData.steamid.in_(updated_software.keys()))
             )
             to_notify = to_notify.all()
-            
+
             for server in to_notify:
                 # While we have to unpack the entire tuple, we don't actually care about the first two bits
                 tracking_steamid, tracking_serverid, steamid_data, discord_server = server
@@ -76,7 +75,7 @@ class UpdateCog(commands.Cog):
                 package = steamid.steamid
                 new_buildid = updated_software[package]
                 steamid.buildid = new_buildid
-            
+
             await session.commit()
 
 

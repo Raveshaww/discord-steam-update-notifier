@@ -10,6 +10,7 @@ tracking = Table(
     Column("serverid", ForeignKey("discord_server.id"))
 )
 
+
 class SteamidData(Base):
     __tablename__ = "steamid_data"
 
@@ -19,9 +20,10 @@ class SteamidData(Base):
     buildid: Mapped[str] = mapped_column(nullable=False)
 
     servers = relationship(
-        "DiscordServer", 
-        secondary = tracking,
-        back_populates = "steamids" # This needs to be the name of the "column" in the other table
+        "DiscordServer",
+        secondary=tracking,
+        # This needs to be the name of the "column" in the other table
+        back_populates="steamids"
     )
 
 
@@ -34,6 +36,6 @@ class DiscordServer(Base):
 
     steamids = relationship(
         "SteamidData",
-        secondary = tracking,
+        secondary=tracking,
         back_populates="servers"
     )
