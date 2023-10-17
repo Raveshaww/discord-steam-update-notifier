@@ -1,8 +1,8 @@
-"""moving to asyncpg
+"""version 1.0.0
 
-Revision ID: 389e292bb0d2
+Revision ID: b8afad4010f7
 Revises: 
-Create Date: 2023-10-12 05:03:14.939667
+Create Date: 2023-10-16 23:04:17.780087
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '389e292bb0d2'
+revision: str = 'b8afad4010f7'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

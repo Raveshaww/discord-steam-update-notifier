@@ -13,6 +13,4 @@ ALEMBIC_URL = os.getenv("alembic.url")
 
 BASE_DIR = pathlib.Path(__file__).parent
 
-CMDS_DIR = BASE_DIR / "cmds"
-
 MODELS_DIR = BASE_DIR / "models"
