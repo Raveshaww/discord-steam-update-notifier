@@ -6,12 +6,14 @@ from models.models import SteamidData, DiscordServer, tracking
 from settings import DB_HOST, DB_NAME, DB_PASS, DB_USER
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-engine = create_async_engine(f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}")
+engine = create_async_engine(
+    f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}")
 session_maker = async_sessionmaker(engine, class_=AsyncSession)
 
 
 class Steamid(commands.Cog):
     '''Handles input / output commands from Discord users.'''
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -112,7 +114,6 @@ class Steamid(commands.Cog):
 
             steamid_data = await session.execute(select(SteamidData).filter_by(steamid=steamid))
             steamid_data = steamid_data.scalar()
-            steamid_name = steamid_data.name
 
             if steamid_data is None:
                 steamcmd_results = await get_steamid_info(steamid=steamid)
@@ -124,6 +125,8 @@ class Steamid(commands.Cog):
                 await ctx.send(f"{steamcmd_results['name']} was not being tracked for this server.")
                 return
 
+            steamid_name = steamid_data.name
+            
             discord_server = await session.execute(select(DiscordServer).filter_by(serverid=serverid))
             discord_server = discord_server.scalar()
 
