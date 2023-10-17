@@ -1,11 +1,11 @@
 from discord.ext import tasks, commands
 from sqlalchemy import select
 from models.models import SteamidData, DiscordServer, tracking
-from settings import DB_URL
+from settings import DB_HOST, DB_NAME, DB_PASS, DB_USER
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from utils.get_steamid_info import mass_get_steamid_info
 
-engine = create_async_engine(DB_URL)
+engine = create_async_engine(f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}")
 session_maker = async_sessionmaker(engine, class_=AsyncSession)
 
 
