@@ -27,7 +27,7 @@ docker build -t discord-steam-update-notifier .
 docker run -d -e DISCORD_TOKEN=<your_token_here> \
     -e POSTGRES_USERNAME=<your_postgres_user_here> \
     -e POSTGRES_PASSWORD=<your_postgres_user_pass_here> \
-    -e POSTGRES_HOST=<your_postgress_hostname_and_port_here> \
+    -e POSTGRES_HOST=<your_postgress_hostname:port_here> \
     -e POSTGRES_DB=<your_postgres_database_name_here> \
     --name discord-steam-update-notifier \
     discord-steam-update-notifier
