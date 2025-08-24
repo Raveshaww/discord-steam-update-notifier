@@ -55,6 +55,8 @@ docker run -d -e DISCORD_TOKEN=<your_token_here> \
 - Start tracking by name rather than Steamid.
 - "Hosted" solution.
     - This may be something I look into doing when and if I am ever in the financial position to do so.
+## Contributing
+If you would like to help improve this project, please submit an issue here on GitHub to begin the discussion. 
 # FAQs
 - How do I find the Steamid of a specific piece of software on Steam?
     - The easiest way to find a Steamid for something on Steam is via [Steamdb](https://steamdb.info/)
