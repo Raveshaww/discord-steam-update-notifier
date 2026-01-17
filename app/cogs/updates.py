@@ -5,14 +5,17 @@ from settings import DB_HOST, DB_NAME, DB_PASS, DB_USER
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from utils.get_steamid_info import mass_get_steamid_info
 
-engine = create_async_engine(f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}")
+engine = create_async_engine(
+    f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
+)
 session_maker = async_sessionmaker(engine, class_=AsyncSession)
 
 
 class UpdateCog(commands.Cog):
-    '''Background task that checks for updates for all packages noted in SteamidData. 
-        In the event that a package has been updated, it will then send a message to each server
-        that is currently tracking that package.'''
+    """Background task that checks for updates for all packages noted in SteamidData.
+    In the event that a package has been updated, it will then send a message to each server
+    that is currently tracking that package."""
+
     def __init__(self, bot):
         self.bot = bot
         self.check_buildid.start()
@@ -63,14 +66,17 @@ class UpdateCog(commands.Cog):
 
             for server in to_notify:
                 # While we have to unpack the entire tuple, we don't actually care about the first two bits
-                tracking_steamid, tracking_serverid, steamid_data, discord_server = server
+                tracking_steamid, tracking_serverid, steamid_data, discord_server = (
+                    server
+                )
                 channel = self.bot.get_channel(int(discord_server.channelid))
                 await channel.send(f"{steamid_data.name} has updated.")
 
             # Now that the relevant servers have been notified, we need to make sure our records are up to date
             steamids_to_update = await session.execute(
-                select(SteamidData)
-                .where(SteamidData.steamid.in_(updated_software.keys()))
+                select(SteamidData).where(
+                    SteamidData.steamid.in_(updated_software.keys())
+                )
             )
             steamids_to_update = steamids_to_update.scalars().all()
 

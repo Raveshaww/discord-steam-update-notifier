@@ -1,9 +1,15 @@
-FROM python:3.13.6-alpine3.21
+FROM python:3.14.2-alpine3.23
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+
+COPY pyproject.toml uv.lock ./
+
+RUN uv sync --frozen --no-install-project --no-dev
+
 COPY app/ /app/
 
-RUN pip install -r requirements.txt
-
-CMD [ "/bin/sh", "-c", "alembic upgrade heads && python main.py" ]
+CMD ["/bin/sh", "-c", "uv run alembic upgrade head && uv run main.py"]

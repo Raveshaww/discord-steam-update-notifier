@@ -1,0 +1,14 @@
+[project]
+name = "discord-steam-update-notifier"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "aiohttp>=3.13.3",
+    "alembic>=1.18.1",
+    "asyncpg>=0.31.0",
+    "discord-py>=2.6.4",
+    "dotenv>=0.9.9",
+    "sqlalchemy>=2.0.45",
+]

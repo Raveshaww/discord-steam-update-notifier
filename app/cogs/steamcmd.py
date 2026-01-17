@@ -7,12 +7,13 @@ from settings import DB_HOST, DB_NAME, DB_PASS, DB_USER
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 engine = create_async_engine(
-    f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}")
+    f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
+)
 session_maker = async_sessionmaker(engine, class_=AsyncSession)
 
 
 class Steamid(commands.Cog):
-    '''Handles input / output commands from Discord users.'''
+    """Handles input / output commands from Discord users."""
 
     def __init__(self, bot):
         self.bot = bot
@@ -24,11 +25,11 @@ class Steamid(commands.Cog):
 
     @steamid.command(
         description="Add a steamid to track for updates.",
-        brief="Add a steamid to track."
+        brief="Add a steamid to track.",
     )
     async def add(self, ctx, steamid: str):
-        '''Starts tracking a steamid for the server. This will also set the channel to use for
-            a server's notifications if it has not yet been set.'''
+        """Starts tracking a steamid for the server. This will also set the channel to use for
+        a server's notifications if it has not yet been set."""
         async with session_maker() as session:
             serverid = str(ctx.guild.id)
             channelid = str(ctx.channel.id)
@@ -48,7 +49,8 @@ class Steamid(commands.Cog):
 
             # Checking to see if the steamid is already in the database
             software = await session.execute(
-                select(SteamidData).filter_by(steamid=steamid)
+                select(SteamidData)
+                .filter_by(steamid=steamid)
                 .options(selectinload(SteamidData.servers))
             )
             software = software.scalar()
@@ -71,7 +73,8 @@ class Steamid(commands.Cog):
 
                 # We now have to re-query software, since the above commit closes the query
                 software = await session.execute(
-                    select(SteamidData).filter_by(steamid=steamid)
+                    select(SteamidData)
+                    .filter_by(steamid=steamid)
                     .options(selectinload(SteamidData.servers))
                 )
                 software = software.scalar()
@@ -85,10 +88,7 @@ class Steamid(commands.Cog):
 
             # If a tracking channel isn't set, we're just going to use the channel the command was issued from
             if existing_server is None:
-                server = DiscordServer(
-                    serverid=serverid,
-                    channelid=channelid
-                )
+                server = DiscordServer(serverid=serverid, channelid=channelid)
 
                 session.add(server)
                 software.servers.append(server)
@@ -96,7 +96,9 @@ class Steamid(commands.Cog):
                 await session.commit()
 
                 await ctx.send(f"Added {software_name} to tracked Steam packages.")
-                await ctx.send(f"Using {ctx.channel.name} as the notification channel. Run 'set_channel' in the desired channel to change this.")
+                await ctx.send(
+                    f"Using {ctx.channel.name} as the notification channel. Run 'set_channel' in the desired channel to change this."
+                )
             else:
                 software.servers.append(existing_server)
                 software_name = software.name
@@ -105,14 +107,16 @@ class Steamid(commands.Cog):
 
     @steamid.command(
         description="Stop tracking the specified steamid.",
-        brief="Stop tracking the specified steamid."
+        brief="Stop tracking the specified steamid.",
     )
     async def remove(self, ctx, steamid: str):
-        '''Stops tracking the supplied steamid for the server. This will not remove the steamid from SteamidData'''
+        """Stops tracking the supplied steamid for the server. This will not remove the steamid from SteamidData"""
         async with session_maker() as session:
             serverid = str(ctx.guild.id)
 
-            steamid_data = await session.execute(select(SteamidData).filter_by(steamid=steamid))
+            steamid_data = await session.execute(
+                select(SteamidData).filter_by(steamid=steamid)
+            )
             steamid_data = steamid_data.scalar()
 
             if steamid_data is None:
@@ -122,18 +126,24 @@ class Steamid(commands.Cog):
                     await ctx.send("Invalid input.")
                     return
 
-                await ctx.send(f"{steamcmd_results['name']} was not being tracked for this server.")
+                await ctx.send(
+                    f"{steamcmd_results['name']} was not being tracked for this server."
+                )
                 return
 
             steamid_name = steamid_data.name
-            
-            discord_server = await session.execute(select(DiscordServer).filter_by(serverid=serverid))
+
+            discord_server = await session.execute(
+                select(DiscordServer).filter_by(serverid=serverid)
+            )
             discord_server = discord_server.scalar()
 
-            remove_tracking = await session.execute(delete(tracking).where(
-                (tracking.c.steamid == steamid_data.id) &
-                (tracking.c.serverid == discord_server.id)
-            ))
+            remove_tracking = await session.execute(
+                delete(tracking).where(
+                    (tracking.c.steamid == steamid_data.id)
+                    & (tracking.c.serverid == discord_server.id)
+                )
+            )
             deleted_count = remove_tracking.rowcount
 
             await session.commit()
@@ -144,11 +154,10 @@ class Steamid(commands.Cog):
                 await ctx.send(f"{steamid_name} was not being tracked for this server.")
 
     @steamid.command(
-        description="List tracked steamids.",
-        brief="List tracked steamids."
+        description="List tracked steamids.", brief="List tracked steamids."
     )
     async def list(self, ctx):
-        '''Lists all steamids currently tracked for the server.'''
+        """Lists all steamids currently tracked for the server."""
         async with session_maker() as session:
             serverid = str(ctx.guild.id)
 
@@ -167,25 +176,26 @@ class Steamid(commands.Cog):
 
                 await ctx.send("\n".join(output))
             else:
-                await ctx.send("No Steam packages are currently being tracked for this server.")
+                await ctx.send(
+                    "No Steam packages are currently being tracked for this server."
+                )
 
     @steamid.command(
         description="Set update notification channel.",
-        brief="Set update notification channel."
+        brief="Set update notification channel.",
     )
     async def set_channel(self, ctx):
-        '''Sets the channel to be used for update notifications for the server.'''
+        """Sets the channel to be used for update notifications for the server."""
         async with session_maker() as session:
             serverid = str(ctx.guild.id)
             channelid = str(ctx.channel.id)
 
-            existing_channel = await session.execute(select(DiscordServer).filter_by(serverid=serverid))
+            existing_channel = await session.execute(
+                select(DiscordServer).filter_by(serverid=serverid)
+            )
 
             if existing_channel.first() is None:
-                server = DiscordServer(
-                    serverid=serverid,
-                    channelid=channelid
-                )
+                server = DiscordServer(serverid=serverid, channelid=channelid)
 
                 session.add(server)
                 await session.commit()
